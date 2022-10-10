@@ -16,7 +16,9 @@ const Signin = ({ auth }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     signInWithEmailAndPassword(auth, email, password)
-      .then((cred) => history.push(`/home/${cred.user.uid}`))
+      .then((cred) =>
+        history.push(`/profile/${cred.user.uid}/${cred.user.uid}`)
+      )
       .catch((err) => {
         setError(true);
       });

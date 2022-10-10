@@ -1,80 +1,70 @@
-import { collection, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  setDoc,
+  query,
+  orderBy,
+  deleteDoc,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Posts from "./Posts";
-
 const Home = ({ db }) => {
   const uid = useParams().uid;
-
+  //States
   const [following, setFollowing] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [posts, setPosts] = useState("");
   const [allPosts, setAllPosts] = useState("");
 
+  //Collection Refs
   const followingColRef = collection(db, "users", uid, "following");
-  const usersRef = collection(db, "users");
+  const postsColRef = collection(db, "users", uid, "allPosts");
+  const q = query(postsColRef, orderBy("created_at", "desc"));
 
   useEffect(() => {
     onSnapshot(followingColRef, (snapshot) => {
       setFollowing(snapshot.docs.map((item) => item.id));
     });
 
-    onSnapshot(usersRef, (snapshot) => {
-      setUsers(snapshot.docs.map((item) => item.id));
+    onSnapshot(q, (snapshot) => {
+      setAllPosts(
+        snapshot.docs.map((item) => ({ ...item.data(), id: item.id }))
+      );
     });
   }, []);
 
-  function postExists(id) {
-    if (posts) {
-      return posts.some(function (el) {
-        return el.id === id;
+  useEffect(() => {
+    allPosts &&
+      allPosts.map((post) => {
+        deleteDoc(doc(db, "users", uid, "allPosts", post.id));
       });
-    }
-  }
 
-  function loadPostsToArray() {
-    return new Promise(function (resolve, reject) {
-      const values = users.filter((value) => following.includes(value));
-      const array = [];
-      values.map((user) => {
-        const postsColRef = collection(db, "users", user, "posts");
-        onSnapshot(postsColRef, (snapshot) => {
-          //console.log(snapshot.docs.map((item) => item.id)[0]);
-          if (!postExists(snapshot.docs.map((item) => item.id)[0])) {
-            array.push(
-              snapshot.docs.map((item) => ({ ...item.data(), id: item.id }))
-            );
-            resolve(array);
-          }
-        });
+    following.map((value) => {
+      const postsColRef = collection(db, "users", value, "posts");
+      onSnapshot(postsColRef, (snapshot) => {
+        const posts = snapshot.docs.map((item) => ({
+          ...item.data(),
+          id: item.id,
+        }));
+        posts.map((post) =>
+          setDoc(doc(db, "users", uid, "allPosts", post.id), post)
+        );
       });
     });
-  }
-  useEffect(() => {
-    loadPostsToArray().then(function (array) {
-      setPosts(array);
+
+    const postsColRef = collection(db, "users", uid, "posts");
+    onSnapshot(postsColRef, (snapshot) => {
+      const posts = snapshot.docs.map((item) => ({
+        ...item.data(),
+        id: item.id,
+      }));
+      posts.map((post) =>
+        setDoc(doc(db, "users", uid, "allPosts", post.id), post)
+      );
     });
   }, [following]);
-
-  useEffect(() => {
-    const arr = [];
-    posts &&
-      posts.map((user) => {
-        user.map((post) => arr.push(post));
-      });
-    setAllPosts(
-      arr.sort(function (a, b) {
-        return b.created_at.seconds - a.created_at.seconds;
-      })
-    );
-  }, [posts]);
-
-  useEffect(() => {
-    allPosts && console.log(allPosts);
-  }, [allPosts]);
-
-  //posts && posts.map((post) => console.log(post));
-
+  // compare two array and get the diff
+  // what the first array has that the second dont .
   return (
     <div className="app-main">
       <Posts db={db} uid={uid} posts={allPosts} />

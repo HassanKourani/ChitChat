@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   query,
   orderBy,
+  setDoc,
 } from "firebase/firestore";
 const Chat = ({ db }) => {
   const uid = useParams().uid;
@@ -39,6 +40,8 @@ const Chat = ({ db }) => {
     uid,
     "allmessages"
   );
+  const ChatDocRef = doc(db, "users", uid, "chat", vid);
+  const ChatVDocRef = doc(db, "users", vid, "chat", uid);
   const q = query(allMessagesColRef, orderBy("createdAt"));
 
   useEffect(() => {
@@ -63,12 +66,18 @@ const Chat = ({ db }) => {
     e.preventDefault();
     e.stopPropagation();
     if (message) {
+      setDoc(ChatDocRef, {
+        uid: uid,
+      });
       addDoc(allMessagesColRef, {
         message: message,
         from: uid,
         createdAt: serverTimestamp(),
       }).then(() => {
         setMessage("");
+      });
+      setDoc(ChatVDocRef, {
+        uid: vid,
       });
       addDoc(allMessagesVColRef, {
         message: message,
@@ -82,8 +91,8 @@ const Chat = ({ db }) => {
   //   console.log(received, "from ", user.name);
 
   return (
-    <div className="app-main bg-gray-100">
-      <div className="fixed z-50 top-0 sm:w-2/3 lg:w-3/4 bg-primary rounded-b-md text-white text-xl p-3 shadow-sm shadow-gray-400">
+    <div className="app-main bg-gray-100 min-h-screen">
+      <div className="fixed w-full top-10  z-40 sm:top-0 sm:w-2/3 lg:w-3/4 bg-primary rounded-b-md text-white text-xl p-3 shadow-sm shadow-gray-400">
         {user && user.name}
       </div>
       <div className="max-h-full relative px-3 flex flex-col">
@@ -103,10 +112,10 @@ const Chat = ({ db }) => {
           ))}
       </div>
 
-      <div className="flex fixed bottom-0 sm:w-2/3 lg:w-3/4 border border-primary pl-2 h-12 overflow-hidden rounded-l-full">
+      <div className="flex w-full items-center fixed bottom-0 sm:w-2/3 lg:w-3/4 border border-primary pl-2 h-12 overflow-hidden rounded-l-full z-40 bg-white">
         <input
           type="text"
-          className="w-full outline-none"
+          className="w-full outline-none bg-inherit"
           placeholder="Message "
           value={message}
           onChange={(e) => {

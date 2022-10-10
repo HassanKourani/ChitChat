@@ -20,14 +20,16 @@ const Navbar = () => {
 
         <h1 className="lg:text-5xl text-2xl font-bold">CHITCHAT</h1>
       </div>
-      <div className="sm:mt-20">
-        <p className="sm:text-3xl text-lg hidden sm:block">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Non dolorem
-          animi, voluptates necessitatibus earum nesciunt?
-        </p>
+      <div className="sm:mt-20 ">
+        <div className="sm:text-4xl xl:text-6xl text-lg hidden sm:block text-secondary-100">
+          <h1 className="font-bold">Chat,Connect</h1>
+          <h1 className="text-end mt-6 font-extrabold">
+            Meet,<span className="text-white">Explore</span>
+          </h1>
+        </div>
 
         <div className="font-bold  text-primary text-sm sm:text-lg sm:mt-20">
-          <Link to="/signin" className="nav-btn">
+          <Link to="/" className="nav-btn">
             Sign in
           </Link>
           <Link to="/signup" className="nav-btn">

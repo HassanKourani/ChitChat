@@ -68,7 +68,7 @@ const Search = ({ db }) => {
                 {searching && (
                   <svg
                     aria-hidden="true"
-                    className=" w-6 h-6 text-gray-300 animate-spin dark:text-gray-600 fill-primary"
+                    className=" w-6 h-6 text-gray-300 animate-spin fill-primary"
                     viewBox="0 0 100 101"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"

@@ -7,7 +7,11 @@ import {
   setDoc,
   deleteDoc,
   addDoc,
+  query,
+  orderBy,
+  serverTimestamp,
 } from "firebase/firestore";
+
 import { useEffect, useState } from "react";
 const Post = ({ db }) => {
   const history = useHistory();
@@ -27,6 +31,7 @@ const Post = ({ db }) => {
 
   const LikesPostscolRef = collection(db, "users", uid, "liked_posts");
   const CommentsColRef = collection(db, "users", vid, "posts", pid, "comments");
+  const q = query(CommentsColRef, orderBy("created_at", "desc"));
 
   useEffect(() => {
     onSnapshot(userRef, (doc) => {
@@ -41,7 +46,7 @@ const Post = ({ db }) => {
         snapshot.docs.map((item) => ({ ...item.data(), id: item.id }))
       );
     });
-    onSnapshot(CommentsColRef, (snapshot) => {
+    onSnapshot(q, (snapshot) => {
       setComments(
         snapshot.docs.map((item) => ({ ...item.data(), id: item.id }))
       );
@@ -110,6 +115,8 @@ const Post = ({ db }) => {
         comment: comment,
         user: user.name,
         uid: user.id,
+        profile: user.profile,
+        created_at: serverTimestamp(),
       });
     }
   };
@@ -133,16 +140,21 @@ const Post = ({ db }) => {
     e.stopPropagation();
     const docRef = doc(db, "users", uid, "posts", pid);
     deleteDoc(docRef);
+    const allPostsdocRef = doc(db, "users", uid, "allPosts", post.id);
+    deleteDoc(allPostsdocRef);
     history.goBack();
   };
 
-  //console.log(comments.length);
   return (
     <div className="app-main">
       {post && (
         <div className="flex gap-4 border-b border-gray-100 py-3 px-4 ">
           <div className="">
-            <div className="w-12 h-12 bg-black rounded-full"></div>
+            <img
+              src={post.profile}
+              alt=""
+              className="w-12 h-11  rounded-full"
+            />
           </div>
           <div className="w-full">
             <div className=" flex justify-between">
@@ -161,6 +173,15 @@ const Post = ({ db }) => {
               </div>
             </div>
             <div className="mt-2">{post.body}</div>
+            {post.image && (
+              <div className="">
+                <img
+                  src={post.image}
+                  className="sm:w-1/2 w-full rounded-lg"
+                  alt=""
+                />
+              </div>
+            )}
             <div className="mt-4 flex gap-4">
               <div className="flex items-center gap-1">
                 {!isLiked(post.id) && (
@@ -246,14 +267,13 @@ const Post = ({ db }) => {
                 className="text-lg border-b border-gray-200 px-5 py-3 flex gap-2 items-start"
                 key={comment.id}
               >
-                <div className="w-8 h-8 bg-black rounded-full"></div>
                 <div className="">
                   <p className="font-bold hover:text-gray-300">
                     <Link to={`/profile/${uid}/${comment.uid}`}>
-                      {comment.user}
+                      # {comment.user}
                     </Link>
                   </p>
-                  <p>{comment.comment}</p>
+                  <p className="">{comment.comment}</p>
                 </div>
                 {uid === comment.uid && (
                   <div className="flex items-center ml-auto self-end">

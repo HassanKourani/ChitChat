@@ -7,10 +7,15 @@ import {
   onSnapshot,
   setDoc,
   deleteDoc,
+  orderBy,
+  query,
+  updateDoc,
 } from "firebase/firestore";
 import Posts from "./Posts";
 
-const Profile = ({ db }) => {
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+const Profile = ({ db, storage }) => {
   const uid = useParams().uid;
   const vid = useParams().vid;
   const path = useLocation();
@@ -20,18 +25,23 @@ const Profile = ({ db }) => {
   const [followers, setFollowers] = useState("");
   const [isFollowing, setIsFollowing] = useState(true);
   const [posts, setPosts] = useState("");
-
-  // const [image, setImage] = useState();
+  const [Name, setName] = useState("");
+  const [profilePic, setProfilePic] = useState(null);
 
   // post collection of A user ID
   const postsColRef = collection(db, "users", vid, "posts");
   const userRef = doc(db, "users", vid);
+  const myName = doc(db, "users", uid);
   const followingColRef = collection(db, "users", vid, "following");
   const followersColRef = collection(db, "users", vid, "followers");
+  const q = query(postsColRef, orderBy("created_at", "desc"));
 
   useEffect(() => {
     getDoc(userRef).then((res) => {
       setUser(res.data());
+    });
+    getDoc(myName).then((res) => {
+      setName(res.data());
     });
 
     onSnapshot(followingColRef, (snapshot) => {
@@ -40,7 +50,7 @@ const Profile = ({ db }) => {
       );
     });
 
-    onSnapshot(postsColRef, (snapshot) => {
+    onSnapshot(q, (snapshot) => {
       setPosts(snapshot.docs.map((item) => ({ ...item.data(), id: item.id })));
     });
 
@@ -71,8 +81,8 @@ const Profile = ({ db }) => {
         email: user.email,
       });
       setDoc(doc(db, "users", vid, "followers", uid), {
-        name: user.name,
-        email: user.email,
+        name: Name.name,
+        email: Name.email,
       });
     } else if (isfol) {
       const followingdocRef = doc(db, "users", uid, "following", vid);
@@ -82,36 +92,50 @@ const Profile = ({ db }) => {
     }
   };
 
-  // const onChangeImage = (e) => {
-  //   console.log("picture: ", image);
-  //   setImage(...image, e.target.files[0]);
-  // };
+  const onChangeImage = (e) => {
+    if (e.target.files[0]) {
+      setProfilePic(e.target.files[0]);
+    }
+  };
+
+  useEffect(() => {
+    if (profilePic) {
+      const imageRef = ref(storage, profilePic.name);
+      uploadBytes(imageRef, profilePic).then(() => {
+        getDownloadURL(imageRef).then((url) => {
+          updateDoc(userRef, {
+            profile: url,
+          });
+          if (posts) {
+            posts.map((post) => {
+              const postRef = doc(db, "users", vid, "posts", post.id);
+              updateDoc(postRef, {
+                profile: url,
+              });
+            });
+          }
+        });
+      });
+    }
+  }, [profilePic]);
 
   return (
     <div className="app-main">
       <div className="relative h-48 w-full bg-primary flex justify-center items-center">
-        {uid === vid && (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="img-plus bg-gray-200"
-          >
-            <path
-              fillRule="evenodd"
-              d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z"
-              clipRule="evenodd"
-            />
-          </svg>
+        {user.profile && (
+          <img
+            src={user.profile}
+            alt="Anime"
+            className="absolute w-full h-full object-cover "
+          />
         )}
-
-        <div className="profile-img">
-          {uid === vid && (
+        {uid === vid && (
+          <label htmlFor="image" className="cursor-pointer ">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="img-plus"
+              className="img-plus rounded-full bg-white "
             >
               <path
                 fillRule="evenodd"
@@ -119,11 +143,18 @@ const Profile = ({ db }) => {
                 clipRule="evenodd"
               />
             </svg>
-          )}
-        </div>
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              className="hidden"
+              onChange={onChangeImage}
+            />
+          </label>
+        )}
       </div>
       {user && (
-        <div className="p-10 font-bold md:text-xl text-lg flex justify-between border-b border-gray-300">
+        <div className="p-10 font-bold md:text-xl text-lg flex flex-col sm:flex-row justify-between border-b border-gray-300">
           <div>
             <div className="flex gap-2">
               <h1>{user.name}</h1>
@@ -186,7 +217,7 @@ const Profile = ({ db }) => {
           </div>
         </div>
       )}
-      <Posts db={db} uid={uid} vid={vid} posts={posts} />
+      <Posts db={db} uid={uid} posts={posts} />
     </div>
   );
 };

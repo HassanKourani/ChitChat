@@ -12,6 +12,9 @@ const Signup = ({ auth, db }) => {
   const [checkPass, setCheckPass] = useState("");
   const [passErr, setPassErr] = useState(false);
   const [emailErr, setEmailErr] = useState(false);
+
+  const history = useHistory();
+
   const handleShowPass = () => {
     setShowPass(!showPass);
   };
@@ -22,12 +25,12 @@ const Signup = ({ auth, db }) => {
     if (checkPass === password) {
       createUserWithEmailAndPassword(auth, email, password)
         .then((cred) => {
-          console.log(cred);
+          //console.log(cred);
           setDoc(doc(db, "users", cred.user.uid), {
             email: email,
             name: userName,
           }).then(() => {
-            console.log("user add to auth and database");
+            history.push(`/profile/${cred.user.uid}/${cred.user.uid}`);
           });
         })
         .catch((err) => {

@@ -22,12 +22,12 @@ const UsersList = ({ db }) => {
     });
   }, []);
 
-  console.log(list);
+  //console.log(list);
 
   return (
     <div className="app-main">
       {user && (
-        <div className="text-2xl font-bold py-4 px-2 text-primary">
+        <div className="text-2xl font-bold py-4 px-2 text-black">
           {path === "following" && <span>People Followed by {user.name}:</span>}
           {path === "followers" && <span>People Following {user.name}:</span>}
         </div>
@@ -35,7 +35,7 @@ const UsersList = ({ db }) => {
       {list &&
         list.map((user) => (
           <Link to={`/profile/${uid}/${user.id}`} key={user.id}>
-            <div className=" py-4 px-6 border-t border-primary text-primary hover:bg-primary hover:text-white">
+            <div className=" py-4 px-6 border-t border-gray-300 text-gray-700 hover:bg-primary hover:text-white">
               <p className="text-xl font-bold">{user.name}</p>
               <p className="text-sm text-gray-300 font-thin">{user.email}</p>
             </div>
