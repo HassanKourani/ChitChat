@@ -28,12 +28,20 @@ const Navbar = () => {
           </h1>
         </div>
 
-        <div className="font-bold  text-primary text-sm sm:text-lg sm:mt-20">
-          <Link to="/" className="nav-btn">
-            Sign in
-          </Link>
-          <Link to="/signup" className="nav-btn">
-            Sign up
+        <div className="font-bold  text-primary text-sm sm:text-lg sm:mt-20 flex flex-col items-center gap-4">
+          <div className="">
+            <Link to="/" className="nav-btn">
+              Sign in
+            </Link>
+            <Link to="/signup" className="nav-btn">
+              Sign up
+            </Link>
+          </div>
+          <Link
+            to="/profile/DiAud7o1KqaGtkgO96GcHdi8hu62/DiAud7o1KqaGtkgO96GcHdi8hu62"
+            className="nav-btn w-max"
+          >
+            Sign in as Guest
           </Link>
         </div>
       </div>
